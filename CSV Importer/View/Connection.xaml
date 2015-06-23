@@ -1,0 +1,75 @@
+﻿<Window x:Class="CSV_Importer.View.Connection"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
+        xmlns:cmd="clr-namespace:GalaSoft.MvvmLight.Command;assembly=GalaSoft.MvvmLight.Extras"
+        Title="Database Connection" WindowStartupLocation="CenterScreen" WindowStyle="None" 
+        Cursor="{Binding CurrentCursor}" Height="450" Width="570" ResizeMode="NoResize"
+        DataContext="{Binding Source={StaticResource Locator}, Path=ConnectionVM}" >
+
+  <Grid  Background="{DynamicResource Gray}" TextElement.Foreground="{DynamicResource White}" TextElement.FontSize="18" TextElement.FontFamily="Segoe Ui Light"  >
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="80"></RowDefinition>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="3*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="2*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Database Connection" Margin="15,0,0,0"  Grid.ColumnSpan="2" FontWeight="Bold"  FontSize="40" HorizontalAlignment="Left" VerticalAlignment="Center"></TextBlock>
+                <Button Click="Close" Height="30" Width="30" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="10" Background="Transparent" Foreground="{StaticResource White}" Content="X" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" FontSize="20"  Grid.Column="1"  FontFamily="Segoe Ui Light"></Button>
+
+                <ComboBox  IsEditable="True" Grid.Column="1" Grid.Row="1" Height="30" Text="{Binding SelectedServer}"  Margin="0,0,10,0"  ItemsSource="{Binding Servers}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <TextBlock HorizontalAlignment="Left" Margin="40,0,0,0" VerticalAlignment="Center" Text="Server" Grid.Row="1" />
+
+                <Grid  Grid.Row="2" Grid.ColumnSpan="2"  >
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="2*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <CheckBox  HorizontalAlignment="Right"  Background="Transparent" Padding="7,0,0,0" Foreground="{StaticResource White}" FontSize="17" Margin="0,0,10,0" Grid.Row="2" Grid.Column="1" Content="Use Windows Authentication" IsChecked="{Binding IsWindowsAuthentication}"/>
+                    <TextBlock Text="Username" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="40,0,0,0"/>
+                    <TextBlock Text="Password" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="40,0,0,0" Grid.Row="1"/>
+                    <TextBox   IsEnabled="{Binding IsWindowsAuthentication, Converter={StaticResource NotConverter}}" Grid.Column="1" BorderThickness="1" Padding="5,0,0,0"  Foreground="{StaticResource White}" Margin="0,0,10,0" BorderBrush="{StaticResource White}" Height="30"  Background="Transparent" Text="{Binding Username}"/>
+                    <PasswordBox  IsEnabled="{Binding IsWindowsAuthentication, Converter={StaticResource NotConverter}}"  Tag="Password" Grid.Column="1" BorderThickness="1" Padding="5,0,0,0"  Foreground="{StaticResource White}" Margin="0,0,10,0" BorderBrush="{StaticResource White}" Height="30"  Background="Transparent" Grid.Row="1" >
+                        <i:Interaction.Triggers>
+                            <i:EventTrigger EventName="PasswordChanged">
+                                <cmd:EventToCommand Command="{Binding PasswordChanged}" PassEventArgsToCommand="True"/>
+                            </i:EventTrigger>
+                        </i:Interaction.Triggers>
+                    </PasswordBox>
+                </Grid>
+
+                <TextBlock VerticalAlignment="Center" Text="Database" HorizontalAlignment="Left" Margin="40,0,0,0" Grid.Row="3"/>
+                <ComboBox SelectedValue="{Binding SelectedDatabase}" Height="30" Margin="0,0,10,0" ItemsSource="{Binding Databases}" Grid.Column="1" Grid.Row="3">
+                    <i:Interaction.Triggers>
+                        <i:EventTrigger EventName="DropDownOpened">
+                            <cmd:EventToCommand Command="{Binding Mode=OneWay, Path=LoadDatabase}"/>
+                        </i:EventTrigger>
+                    </i:Interaction.Triggers>
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+
+                <Button Command="{Binding Connect}" Height="35" Width="200" Background="{StaticResource Blue}"  Foreground="{StaticResource White}" FontFamily="Segoe Ui Light" HorizontalAlignment="Center" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"  Content="Connect" Grid.ColumnSpan="2"   VerticalAlignment="Center" Grid.Row="5" />
+            </Grid>
+</Window>
+

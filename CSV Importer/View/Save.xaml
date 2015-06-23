@@ -1,0 +1,78 @@
+﻿<UserControl x:Class="CSV_Importer.View.Save"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      mc:Ignorable="d" 
+      DataContext="{Binding Source={StaticResource Locator} , Path=SaveVM}"
+        Width="490"
+	>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
+            <RowDefinition />
+            <RowDefinition Height="auto"/>
+        </Grid.RowDefinitions>
+        
+        <!--Database-->
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <TextBlock  Text="Database Connection: "/>
+            <TextBlock  Grid.Row="1" Text="Table Name: "/>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" >
+                <TextBlock TextWrapping="Wrap" Text="{Binding ConnectionDetails}"/>
+                <Button Content="Connect" Command="{Binding ConnectDatabase}"/>
+            </StackPanel>
+            <ComboBox HorizontalAlignment="Left" Width="230"  Grid.Column="1" Grid.Row="1" ItemsSource="{Binding TableList}" SelectedValue="{Binding TableName}"/>
+            <TextBlock Text="Load Sample Csv" Grid.Row="2" />
+            <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.Column="1">
+                <TextBlock Margin="0,5" MaxWidth="150"  Text="{Binding CSVFilename}"/>
+                <Button Margin="5" Content="Browse" Command="{Binding SelectCSV}" />
+            </StackPanel>
+            <TextBlock Grid.Row="3" Text="Use First row as Column Header"/>
+            <CheckBox IsChecked="{Binding IsFirstRowHeader}" HorizontalAlignment="Left" Grid.Row="3" Grid.Column="1"/>
+        </Grid>
+        <StackPanel Margin="0,10" Grid.Row="1">
+            <Rectangle Margin="0,5" Height="2" Fill="Black" />
+            <Grid Margin="5,0" Width="450">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <TextBlock HorizontalAlignment="Center" Text="Table Columns"/>
+                <TextBlock HorizontalAlignment="Center" Grid.Column="1" Text="CSV Headers"/>
+                <TextBlock HorizontalAlignment="Center" Grid.Column="2" Text="Tags(Optional)"/>
+            </Grid>
+            <Rectangle Margin="0,5" Height="2" Fill="Black" />
+            <ListView ItemsSource="{Binding TableFields}" Grid.Row="1">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <Grid Width="450">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Text="{Binding SqlColumnHeader}"/>
+                        <ComboBox IsEditable="True" ItemsSource="{Binding Source={StaticResource Locator}, Path=SaveVM.CSVHeaders}" Grid.Column="1" Text="{Binding CsvColumnHeader}"/>
+                        <TextBox Grid.Column="2" Text="{Binding Tag}"/>
+                    </Grid>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+        </StackPanel>
+        <Button Content="Save" Command="{Binding SaveCommand}" Grid.Row="2"/>
+    </Grid>
+</UserControl>
