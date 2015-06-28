@@ -18,11 +18,22 @@ namespace CSV_Importer.ViewModel
             {
             }
 
+            SimpleIoc.Default.Register<ViewModel.RunViewModel>();
             SimpleIoc.Default.Register<ViewModel.SettingViewModel>(true);
             SimpleIoc.Default.Register<ViewModel.Connection>();
             SimpleIoc.Default.Register<SaveViewModel>();
             SimpleIoc.Default.Register<MainViewModel>();
         }
+
+
+        public RunViewModel RunVM
+        {
+            get
+            {
+                return ServiceLocator.Current.GetInstance<RunViewModel>();
+            }
+        }
+        
 
         public SettingViewModel Settings
         {

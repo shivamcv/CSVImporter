@@ -31,7 +31,15 @@ namespace CSV_Importer.ViewModel
                }
            }
 
-           public ObservableCollection<Model.TableField> TableFields { get; set; }
+           private ObservableCollection<Model.TableField> tableFields;
+
+           public ObservableCollection<Model.TableField> TableFields
+           {
+               get { return tableFields; }
+               set { tableFields = value;
+               RaisePropertyChanged("TableFields");
+               }
+           }
 
            private IEnumerable<string> csvHeaders;
            public IEnumerable<string> CSVHeaders
@@ -88,8 +96,68 @@ namespace CSV_Importer.ViewModel
 
            public bool IsFirstRowHeader { get; set; }
 
-           public string ProviderConnectionString { get; set; }
+           private string providerConnectionString;
+
+           public string ProviderConnectionString
+           {
+               get { return providerConnectionString; }
+               set {
+                   if (string.IsNullOrEmpty(value) || providerConnectionString == value) return;
+                   providerConnectionString = value;
+                   InitialiseConnection();
+               }
+           }
+           
            public string ConnectionString { get; set; }
+
+           private string cSVDirectory;
+
+           public string CSVDirectory
+           {
+               get { return cSVDirectory; }
+               set
+               {
+                   cSVDirectory = value;
+                   RaisePropertyChanged("CSVDirectory");
+               }
+           }
+
+           private string amibrokerDB;
+
+           public string AmibrokerDB
+           {
+               get { return amibrokerDB; }
+               set
+               {
+                   amibrokerDB = value;
+                   RaisePropertyChanged("AmibrokerDB");
+               }
+           }
+
+           private string amibrokerPath;
+
+           public string AmibrokerPath
+           {
+               get { return amibrokerPath; }
+               set
+               {
+                   amibrokerPath = value;
+                   RaisePropertyChanged("AmibrokerPath");
+               }
+           }
+
+           private int timeDelay;
+
+           public int TimeDelay
+           {
+               get { return timeDelay; }
+               set
+               {
+                   timeDelay = value;
+                   RaisePropertyChanged("TimeDelay");
+               }
+           }
+
         #endregion
 
         #region Commands
@@ -102,31 +170,33 @@ namespace CSV_Importer.ViewModel
                        {
                           var temp = SimpleIoc.Default.GetInstance<Connection>().loadConnectionString();
 
+                          if (temp == null) return;
+
                           ConnectionString = temp.ConnectionString;
-                          ProviderConnectionString = temp.ProviderConnectionString;
-                          SqlConnectionStringBuilder conn = new SqlConnectionStringBuilder();
-
-                          conn.ConnectionString = temp.ProviderConnectionString;
-
-                          ConnectionDetails = string.Format("Server : {0} \n Database : {1}", conn.DataSource, conn.InitialCatalog);
-
-                          using (var db = new SqlConnection(conn.ConnectionString))
-                          {
-                              db.Open();
-                              var cmd = new SqlCommand("SELECT * FROM information_schema.tables", db);
-                              var reader = cmd.ExecuteReader();
-                              var tempList = new List<string>();
-                              while(reader.Read())
-                              {
-                                tempList.Add(reader[2].ToString());
-                              }
-                              reader.Close();
-                              TableList = tempList;
-                              db.Close();
-                          }
-
-
+                          ProviderConnectionString =temp.ProviderConnectionString;
                        }));
+               }
+           }
+
+           private void InitialiseConnection()
+           {
+               SqlConnectionStringBuilder conn = new SqlConnectionStringBuilder();
+               conn.ConnectionString = ProviderConnectionString;
+               ConnectionDetails = string.Format("Server : {0} \n Database : {1}", conn.DataSource, conn.InitialCatalog);
+
+               using (var db = new SqlConnection(conn.ConnectionString))
+               {
+                   db.Open();
+                   var cmd = new SqlCommand("SELECT * FROM information_schema.tables", db);
+                   var reader = cmd.ExecuteReader();
+                   var tempList = new List<string>();
+                   while (reader.Read())
+                   {
+                       tempList.Add(reader[2].ToString());
+                   }
+                   reader.Close();
+                   TableList = tempList;
+                   db.Close();
                }
            }
 
@@ -145,15 +215,26 @@ namespace CSV_Importer.ViewModel
                            {
                                var temp = new Model.TableSetting();
                                temp.ConnectionString = ConnectionString;
-                               temp.Fields = TableFields.ToList();
+                               temp.Fields = TableFields;
                                temp.ProviderConnectionString = ProviderConnectionString;
                                temp.TableName = TableName;
                                temp.IsFirstRowHeader = IsFirstRowHeader;
+                               temp.CSVFolder = CSVDirectory;
+                               temp.AmibrokerExe = AmibrokerPath;
+                               temp.AmibrokerDb = AmibrokerDB;
+                               temp.Delay = timeDelay;
                                XMLHelper.writeXml(temp, dig.FileName);
                            }
+                           Reset();
                        }));
                }
              
+           }
+
+           private void Reset()
+           {
+               TableFields.Clear();
+
            }
 
            private RelayCommand selectCSV;
@@ -198,7 +279,62 @@ namespace CSV_Importer.ViewModel
                   ErrorReporting.ReportError(ex);
               }
            }
-        
+
+           private RelayCommand selectAmibrokerPath;
+
+           public RelayCommand SelectAmibrokerPath
+           {
+               get
+               {
+                   return selectAmibrokerPath ?? (selectAmibrokerPath = new RelayCommand(() =>
+                   {
+                       var dig = new OpenFileDialog();
+                       dig.Filter = "Executable Files (*.exe)|*.exe";
+
+                       if (dig.ShowDialog() == true)
+                       {
+                           AmibrokerPath = dig.FileName;
+                       }
+                   }));
+               }
+           }
+
+           private RelayCommand selectAmibrokerDB;
+
+           public RelayCommand SelectAmibrokerDB
+           {
+               get
+               {
+                   return selectAmibrokerDB ?? (selectAmibrokerDB = new RelayCommand(() =>
+                   {
+                       var dig = new System.Windows.Forms.FolderBrowserDialog();
+
+                       if (dig.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                       {
+                           AmibrokerDB = dig.SelectedPath;
+                       }
+                   }));
+               }
+           }
+
+           private RelayCommand selectCSVDirectory;
+
+           public RelayCommand SelectCSVDirectory
+           {
+               get
+               {
+                   return selectCSVDirectory ?? (selectCSVDirectory = new RelayCommand(() =>
+                   {
+                       var dig = new System.Windows.Forms.FolderBrowserDialog();
+
+                       if (dig.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                       {
+                           CSVDirectory = dig.SelectedPath;
+                       }
+                   }));
+               }
+           }
+
         
         #endregion
     }

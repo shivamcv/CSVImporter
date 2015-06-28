@@ -1,15 +1,25 @@
-﻿using GalaSoft.MvvmLight;
+﻿using CSV_Importer.Model;
+using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
+using GalaSoft.MvvmLight.Ioc;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
+
 
 namespace CSV_Importer.ViewModel
 {
    public class RunViewModel:ViewModelBase
     {
+        public Model.TableSetting TableData { get; set; }
+
        public RunViewModel()
        {
 
@@ -20,51 +30,49 @@ namespace CSV_Importer.ViewModel
        public string SelectedCSV
        {
            get { return selectedCSV; }
-           set { selectedCSV = value;
+           set {
+               if (SelectedCSV == value || value == null) return;
+               selectedCSV = value;
+
+               loadCSV();
            RaisePropertyChanged("SelectedCSV");
            }
        }
 
-       private string cSVDirectory;
-
-       public string CSVDirectory
+       private void loadCSV()
        {
-           get { return cSVDirectory; }
-           set { cSVDirectory = value;
-           RaisePropertyChanged("CSVDirectory");
+           if(File.Exists(SelectedCSV))
+           {
+               try
+               {
+                   TableData = HelperClasses.XMLHelper.readXml<Model.TableSetting>(SelectedCSV);
+                   ContentInfo = TableData.ToString();
+
+               }
+               catch (Exception ex)
+               {
+                   HelperClasses.ErrorReporting.ReportError(ex, "Couldn't Load data!!", true);
+                   ContentInfo = string.Empty;
+               }
            }
+           else
+               ContentInfo = string.Empty;
+
        }
 
-       private string amibrokerDB;
+      
 
-       public string AmibrokerDB
+       private string contentInfo;
+
+       public string ContentInfo
        {
-           get { return amibrokerDB; }
-           set { amibrokerDB = value;
-           RaisePropertyChanged("AmibrokerDB");
+           get { return contentInfo; }
+           set { contentInfo = value;
+           RaisePropertyChanged("ContentInfo");
            }
        }
-
-       private string amibrokerPath;
-
-       public string AmibrokerPath
-       {
-           get { return amibrokerPath; }
-           set { amibrokerPath = value;
-           RaisePropertyChanged("AmibrokerPath");
-           }
-       }
-
-       private int timeDelay;
-
-       public int TimeDelay
-       {
-           get { return timeDelay; }
-           set { timeDelay = value;
-           RaisePropertyChanged("TimeDelay");
-           }
-       }
-
+       
+       
        private string log;
 
        public string Log
@@ -75,8 +83,29 @@ namespace CSV_Importer.ViewModel
            }
        }
 
+       private string runStop= "Run";
+
+       public string RunStop
+       {
+           get { return runStop; }
+           set { runStop = value;
+           RaisePropertyChanged("RunStop");
+           }
+       }
+
+       private bool isTaskRunning;
+
+       public bool IsTaskRunning
+       {
+           get { return isTaskRunning; }
+           set { isTaskRunning = value;
+           RaisePropertyChanged("IsTaskRunning");
+           }
+       }
+       
 
         #region command
+       CancellationTokenSource cts;
        private RelayCommand run;
 
        public RelayCommand Run
@@ -85,47 +114,86 @@ namespace CSV_Importer.ViewModel
            {
                return run ?? (run = new RelayCommand(() =>
                    {
+                       if (!IsTaskRunning)
+                       {
+                           cts =  new CancellationTokenSource();
+                           Task t = new Task(async (obj) =>
+                           {
+                               var cancelToken = (CancellationToken)obj;
+                               while (!cancelToken.IsCancellationRequested)
+                               {
+                                   AddLog("Opening Connection");
+                                   await Task.Delay(500);
+                               }
+                           }, cts.Token);
 
-                   }));
+                           IsTaskRunning = true;
+                           t.Start();
+                           RunStop = "Stop";
+                       }
+                       else
+                       {
+                           RunStop = "Run";
+                           cts.Cancel();
+                           IsTaskRunning = false;
+                       }
+
+                   }, () =>
+                       {
+                           if (TableData != null && !string.IsNullOrEmpty(TableData.AmibrokerDb) &&
+                              !string.IsNullOrEmpty(TableData.AmibrokerExe) &&
+                              !string.IsNullOrEmpty(TableData.ConnectionString) &&
+                              !string.IsNullOrEmpty(TableData.CSVFolder) &&
+                              !string.IsNullOrEmpty(TableData.ProviderConnectionString) &&
+                              !string.IsNullOrEmpty(TableData.TableName) &&
+                              TableData.Fields.Any())
+                               
+                               return true;
+
+                           return false;
+                       }
+                   ));
            }
        }
 
-       private RelayCommand selectAmibrokerPath;
+       private void AddLog(string p)
+       {
+           Log += string.Format("\n[{0}] {1}", DateTime.Now.ToString("HH:mm:ss"), p);
+       }
 
-       public RelayCommand SelectAmibrokerPath
+       private RelayCommand edit;
+
+       public RelayCommand Edit
        {
            get
            {
-               return selectAmibrokerPath ?? (selectAmibrokerPath = new RelayCommand(() =>
+               return edit ?? (edit = new RelayCommand(() =>
                    {
+                      var vm = SimpleIoc.Default.GetInstance<SaveViewModel>();
 
-                   }));
+                      vm.AmibrokerDB = TableData.AmibrokerDb;
+                      vm.AmibrokerPath = TableData.AmibrokerExe;
+                      vm.ConnectionString = TableData.ConnectionString;
+                      vm.CSVDirectory = TableData.CSVFolder;
+                      vm.ProviderConnectionString = TableData.ProviderConnectionString;
+                      vm.TableName = TableData.TableName;
+                      vm.TableFields =TableData.Fields;
+                      vm.TimeDelay = TableData.Delay;
+                      vm.IsFirstRowHeader = TableData.IsFirstRowHeader;
+
+                      SimpleIoc.Default.GetInstance<MainViewModel>().GotoSave.Execute(null);
+                   }, 
+                   ()=>
+                   {
+                       if (TableData != null)
+                           return true;
+                       return false;
+                   }
+                   ));
            }
        }
-
-       private RelayCommand selectAmibrokerDB;
-
-       public RelayCommand SelectAmibrokerDB
-       {
-           get
-           {
-               return selectAmibrokerDB ?? (selectAmibrokerDB = new RelayCommand(() =>
-                   {
-
-                   }));
-           }
-       }
-
-       private RelayCommand selectCSVDirectory;
-
-       public RelayCommand SelectCSVDirectory
-       {
-           get { return selectCSVDirectory??(selectCSVDirectory = new RelayCommand(()=>
-               {
-
-               })); }
-       }
-
+       
+     
        private RelayCommand selectCSV;
 
        public RelayCommand SelectCSV
@@ -134,7 +202,14 @@ namespace CSV_Importer.ViewModel
            {
                return selectCSV ?? (selectCSV = new RelayCommand(() =>
                    {
+                       var dig = new OpenFileDialog();
+                       dig.Filter = "XML Files (*.xml)|*.xml";
 
+                       if (dig.ShowDialog() == true)
+                       {
+                           SelectedCSV  = dig.FileName;
+
+                       }
                    }));
            }
        }

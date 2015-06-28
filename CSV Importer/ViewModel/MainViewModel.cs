@@ -1,4 +1,5 @@
 ﻿using GalaSoft.MvvmLight;
+using GalaSoft.MvvmLight.Command;
 
 namespace CSV_Importer.ViewModel
 {
@@ -8,5 +9,18 @@ namespace CSV_Importer.ViewModel
         {
         }
 
+        private RelayCommand gotoSave;
+
+        public RelayCommand GotoSave
+        {
+            get
+            {
+                return gotoSave ?? (gotoSave = new RelayCommand(() =>
+                    {
+                        MainWindow.Tabs.SelectedIndex = 1;
+                    }));
+            }
+        }
+        
     }
 }

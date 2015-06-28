@@ -5,13 +5,14 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       mc:Ignorable="d" 
       DataContext="{Binding Source={StaticResource Locator} , Path=SaveVM}"
-        Width="490"
+        Width="480"
 	>
 
-    <Grid>
+    <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
-            <RowDefinition />
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
         
@@ -42,7 +43,7 @@
             <TextBlock Grid.Row="3" Text="Use First row as Column Header"/>
             <CheckBox IsChecked="{Binding IsFirstRowHeader}" HorizontalAlignment="Left" Grid.Row="3" Grid.Column="1"/>
         </Grid>
-        <StackPanel Margin="0,10" Grid.Row="1">
+        <StackPanel Height="350" Margin="0,10" Grid.Row="1">
             <Rectangle Margin="0,5" Height="2" Fill="Black" />
             <Grid Margin="5,0" Width="450">
                 <Grid.ColumnDefinitions>
@@ -55,7 +56,7 @@
                 <TextBlock HorizontalAlignment="Center" Grid.Column="2" Text="Tags(Optional)"/>
             </Grid>
             <Rectangle Margin="0,5" Height="2" Fill="Black" />
-            <ListView ItemsSource="{Binding TableFields}" Grid.Row="1">
+            <ListView Height="300" ItemsSource="{Binding TableFields}" Grid.Row="1">
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <Grid Width="450">
@@ -73,6 +74,36 @@
             </ListView.ItemTemplate>
         </ListView>
         </StackPanel>
-        <Button Content="Save" Command="{Binding SaveCommand}" Grid.Row="2"/>
+
+        <Grid Grid.Row="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition Width=".4*"/>
+            </Grid.ColumnDefinitions>
+           
+            <TextBlock Grid.Row="0" Text="Select CSV folder path"/>
+            <TextBox Text="{Binding CSVDirectory}" Grid.Column="1" Grid.Row="0"/>
+            <Button Grid.Column="2" Grid.Row="0" Command="{Binding SelectCSVDirectory}" Content="Browse"/>
+
+            <TextBlock Grid.Row="1" Text="Select Amibroker Db Folder path"/>
+            <TextBox Text="{Binding AmibrokerDB}" Grid.Column="1" Grid.Row="1"/>
+            <Button Grid.Column="2" Command="{Binding SelectAmibrokerDB}" Grid.Row="1" Content="Browse"/>
+
+            <TextBlock Grid.Row="2" Text="Select Amibroker EXE"/>
+            <TextBox Text="{Binding AmibrokerPath}" Grid.Column="1" Grid.Row="2"/>
+            <Button Grid.Column="2" Command="{Binding SelectAmibrokerPath}" Grid.Row="2" Content="Browse"/>
+
+            <TextBlock Text="Time Delay in milliseconds" Grid.Row="3"/>
+            <TextBox Text="{Binding TimeDelay}" Grid.Column="1" Grid.Row="3"/>
+        </Grid>
+
+        <Button Margin="0,5,0,0" Width="200" Content="Save" Command="{Binding SaveCommand}" Grid.Row="3"/>
     </Grid>
 </UserControl>

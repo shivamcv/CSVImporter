@@ -153,7 +153,7 @@ namespace CSV_Importer.ViewModel
             }
         }
 
-        EntityConnectionStringBuilder esb = new EntityConnectionStringBuilder();
+        EntityConnectionStringBuilder esb;
         private RelayCommand connect;
 
         public RelayCommand Connect
@@ -172,7 +172,7 @@ namespace CSV_Importer.ViewModel
                             conn.InitialCatalog = SelectedDatabase;
                             conn.MultipleActiveResultSets = true;
 
-
+                            esb = new EntityConnectionStringBuilder();
                            
                             esb.Metadata = @"res://*/Data.TriggerPointModel.csdl|res://*/Data.TriggerPointModel.ssdl|res://*/Data.TriggerPointModel.msl";
                             esb.Provider = "System.Data.SqlClient";

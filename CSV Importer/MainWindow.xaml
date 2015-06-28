@@ -22,7 +22,7 @@
 
     <Grid x:Name="LayoutRoot">
 
-        <TabControl>
+        <TabControl x:Name="tabs">
             <TabItem Header="Run">
                 <view:Run/>
             </TabItem>

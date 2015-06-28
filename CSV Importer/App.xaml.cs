@@ -11,6 +11,16 @@ namespace CSV_Importer
         static App()
         {
             DispatcherHelper.Initialize();
+
+            
+        }
+
+        public App()
+        {
+            DispatcherUnhandledException += (ss, ee) =>
+                {
+                    HelperClasses.ErrorReporting.ReportError(ee.Exception);
+                };
         }
     }
 }
