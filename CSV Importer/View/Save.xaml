@@ -23,6 +23,7 @@
                 <RowDefinition/>
                 <RowDefinition/>
                 <RowDefinition/>
+                <RowDefinition/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>
@@ -41,7 +42,10 @@
                 <Button Margin="5" Content="Browse" Command="{Binding SelectCSV}" />
             </StackPanel>
             <TextBlock Grid.Row="3" Text="Use First row as Column Header"/>
-            <CheckBox IsChecked="{Binding IsFirstRowHeader}" HorizontalAlignment="Left" Grid.Row="3" Grid.Column="1"/>
+            <CheckBox  IsChecked="{Binding IsFirstRowHeader}" HorizontalAlignment="Left" Grid.Row="3" Grid.Column="1"/>
+            <TextBlock Grid.Row="4" Text="Delimiter"/>
+            <TextBox Text="{Binding Delimiter}" Grid.Row="4" Grid.Column="1"/>
+
         </Grid>
         <StackPanel Height="350" Margin="0,10" Grid.Row="1">
             <Rectangle Margin="0,5" Height="2" Fill="Black" />
@@ -67,8 +71,8 @@
                         </Grid.ColumnDefinitions>
 
                         <TextBlock Text="{Binding SqlColumnHeader}"/>
-                        <ComboBox IsEditable="True" ItemsSource="{Binding Source={StaticResource Locator}, Path=SaveVM.CSVHeaders}" Grid.Column="1" Text="{Binding CsvColumnHeader}"/>
-                        <TextBox Grid.Column="2" Text="{Binding Tag}"/>
+                        <ComboBox ItemsSource="{Binding Source={StaticResource Locator}, Path=SaveVM.CSVHeaders}" Grid.Column="1" DisplayMemberPath="Name" SelectedItem="{Binding CsvColumnHeader}"/>
+                        <TextBox Grid.Column="2" Text="{Binding _Tag}"/>
                     </Grid>
                 </DataTemplate>
             </ListView.ItemTemplate>

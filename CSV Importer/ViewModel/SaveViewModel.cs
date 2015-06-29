@@ -6,7 +6,9 @@ using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Data;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -41,8 +43,8 @@ namespace CSV_Importer.ViewModel
                }
            }
 
-           private IEnumerable<string> csvHeaders;
-           public IEnumerable<string> CSVHeaders
+           private IEnumerable<Model.CSVHeader> csvHeaders;
+           public IEnumerable<Model.CSVHeader> CSVHeaders
            {
                get { return csvHeaders; }
                set { csvHeaders = value;
@@ -60,18 +62,44 @@ namespace CSV_Importer.ViewModel
                    using (var conn = new SqlConnection(ProviderConnectionString))
                    {
                        conn.Open();
-                       var cmd = new SqlCommand("SELECT name FROM sys.columns WHERE object_id = OBJECT_ID('"+ value +"')", conn);
+                       var cmd = new SqlCommand("SELECT * from "+ value , conn);
                        var rdr = cmd.ExecuteReader();
 
+                         var schemaTable = rdr.GetSchemaTable();
+
                        TableFields.Clear();
-                       while(rdr.Read())
-                       {
-                           TableFields.Add(new Model.TableField() { SqlColumnHeader = rdr[0].ToString() });
-                       }
+                         foreach (DataRow myField in schemaTable.Rows)
+                         {
+                             var temp = new Model.TableField();
+                             foreach (DataColumn myProperty in schemaTable.Columns)
+                             {
+                                 if (myProperty.ColumnName == "ColumnName")
+                                     temp.SqlColumnHeader = myField[myProperty].ToString();
+
+                                 if(myProperty.ColumnName == "DataTypeName")
+                                     temp.DatatypeName = myField[myProperty].ToString();
+
+                                 temp.ColumnInfo.Add(myProperty.ColumnName, myField[myProperty].ToString());
+                             }
+                             TableFields.Add(temp);
+                         }
+                       
                        rdr.Close();
                        conn.Close();
                    }
                         RaisePropertyChanged("TableName");
+               }
+           }
+
+           private string delimiter = ",";
+           public string Delimiter
+           {
+               get { return delimiter; }
+               set
+               {
+                   delimiter = value;
+                   FillCSVheaders();
+                   RaisePropertyChanged("Delimiter");
                }
            }
 
@@ -83,7 +111,17 @@ namespace CSV_Importer.ViewModel
                RaisePropertyChanged("ConnectionDetails");
                }
            }
-           public string CsvFilePath { get; set; }
+
+           private string csvFilePath;
+
+           public string CsvFilePath
+           {
+               get { return csvFilePath; }
+               set { csvFilePath = value;
+               RaisePropertyChanged("CsvFilePath");
+               }
+           }
+           
 
            private string csvFilename;
            public string CSVFilename
@@ -94,8 +132,16 @@ namespace CSV_Importer.ViewModel
                }
            }
 
-           public bool IsFirstRowHeader { get; set; }
+           private bool isFirstRowHeader;
 
+           public bool IsFirstRowHeader
+           {
+               get { return isFirstRowHeader; }
+               set { isFirstRowHeader = value;
+               RaisePropertyChanged("IsFirstRowHeader");
+               }
+           }
+           
            private string providerConnectionString;
 
            public string ProviderConnectionString
@@ -196,7 +242,35 @@ namespace CSV_Importer.ViewModel
                    }
                    reader.Close();
                    TableList = tempList;
+                   getDatatypes();
                    db.Close();
+               }
+           }
+
+           private void getDatatypes()
+           {
+               using (var conn = new SqlConnection(ProviderConnectionString))
+               {
+                       conn.Open();
+                       var dataTypes = new List<string>();
+                       foreach (var value in TableList)
+                       {
+                           var cmd = new SqlCommand("SELECT * from " + value, conn);
+                           var rdr = cmd.ExecuteReader();
+
+                           var schemaTable = rdr.GetSchemaTable();
+                      
+                           foreach (DataRow myField in schemaTable.Rows)
+                           {
+                               foreach (DataColumn myProperty in schemaTable.Columns)
+                               {
+                                   if (myProperty.ColumnName == "DataTypeName" && !dataTypes.Contains(myField[myProperty].ToString()))
+                                      dataTypes.Add(myField[myProperty].ToString());
+                               }
+                           }
+                            rdr.Close();
+                       }
+                   conn.Close();
                }
            }
 
@@ -223,7 +297,8 @@ namespace CSV_Importer.ViewModel
                                temp.AmibrokerExe = AmibrokerPath;
                                temp.AmibrokerDb = AmibrokerDB;
                                temp.Delay = timeDelay;
-                               XMLHelper.writeXml(temp, dig.FileName);
+                               temp.Delimiter = Delimiter;
+                               XMLHelper.writeDataContractXml(temp, dig.FileName);
                            }
                            Reset();
                        }));
@@ -254,13 +329,15 @@ namespace CSV_Importer.ViewModel
                                CsvFilePath = dig.FileName;
                                CSVFilename = Path.GetFileName(dig.FileName);
 
-                               FillCSVheaders(CsvFilePath);
+                               FillCSVheaders();
+                               if (string.IsNullOrEmpty(CSVDirectory))
+                                   CSVDirectory = Path.GetDirectoryName(dig.FileName);
                            }
                        }));
                }
            }
 
-           private void FillCSVheaders(string CsvFilePath)
+           private void FillCSVheaders()
            {
               try
               {
@@ -268,10 +345,18 @@ namespace CSV_Importer.ViewModel
 
                   if(temp != null)
                   {
-                     var t=  temp.Split(new string[]{","},StringSplitOptions.RemoveEmptyEntries).ToList();
+                     var t=  temp.Split(new string[]{Delimiter},StringSplitOptions.RemoveEmptyEntries).ToList();
 
-                     t.Add("CSVFileName");
-                     CSVHeaders = t;
+                     var h = new List<Model.CSVHeader>();
+
+                     for (int i = 0; i < t.Count(); i++)
+                     {
+                         h.Add(new Model.CSVHeader(i,t[i]));
+                     }
+                     h.Add(new Model.CSVHeader(101, "CSVFileName"));
+                     h.Add(new Model.CSVHeader(102, "CurrentDateTime"));
+                     h.Add(new Model.CSVHeader(-1, "Empty"));
+                     CSVHeaders = h;
                   }
               }
                catch(Exception ex)

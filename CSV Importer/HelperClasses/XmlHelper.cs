@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 using System.Xml.Serialization;
 
 namespace CSV_Importer.HelperClasses
@@ -29,5 +31,36 @@ namespace CSV_Importer.HelperClasses
             textWriter.Close();
         }
 
+         public static T readDataContractXml<T>(string fileName)
+        {
+            var serializer = new DataContractSerializer(typeof(T));
+            T temp;
+
+            using (FileStream fs = new FileStream(fileName, FileMode.Open))
+            {
+                temp = (T)serializer.ReadObject(fs);
+            }
+            return temp;
+        }
+
+        public static void writeDataContractXml<T>(T tempList, string fileName)
+        {
+            var serializer = new DataContractSerializer(typeof(T));
+            string xmlString;
+            using (var sw = new StringWriter())
+            {
+                using (var writer = new XmlTextWriter(sw))
+                {
+                    writer.Formatting = Formatting.Indented; // indent the Xml so it's human readable
+                    serializer.WriteObject(writer, tempList);
+                    writer.Flush();
+                    xmlString = sw.ToString();
+                }
+            }
+            TextWriter textWriter = new StreamWriter(fileName);
+            textWriter.Write(xmlString);
+            textWriter.Close();
+        }
     }
-}
+    }
+

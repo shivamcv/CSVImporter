@@ -58,5 +58,17 @@ namespace CSV_Importer.Properties {
                 this["BgColor"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string configFiles {
+            get {
+                return ((string)(this["configFiles"]));
+            }
+            set {
+                this["configFiles"] = value;
+            }
+        }
     }
 }

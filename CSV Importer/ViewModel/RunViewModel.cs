@@ -1,4 +1,5 @@
 ﻿using CSV_Importer.Model;
+using CSV_Importer.Properties;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Ioc;
@@ -22,8 +23,25 @@ namespace CSV_Importer.ViewModel
 
        public RunViewModel()
        {
+           var temp = Settings.Default.configFiles;
+
+           if (!string.IsNullOrEmpty(temp))
+               CsvHistory = new ObservableCollection<string>(temp.Split('|'));
+           else
+               CsvHistory = new ObservableCollection<string>();
 
        }
+
+       private ObservableCollection<string> csvHistory;
+
+       public ObservableCollection<string> CsvHistory
+       {
+           get { return csvHistory; }
+           set { csvHistory = value;
+           RaisePropertyChanged("CsvHistory");
+           }
+       }
+       
 
        private string selectedCSV;
 
@@ -38,15 +56,22 @@ namespace CSV_Importer.ViewModel
            RaisePropertyChanged("SelectedCSV");
            }
        }
-
+       
        private void loadCSV()
        {
            if(File.Exists(SelectedCSV))
            {
                try
                {
-                   TableData = HelperClasses.XMLHelper.readXml<Model.TableSetting>(SelectedCSV);
+                   TableData = HelperClasses.XMLHelper.readDataContractXml<Model.TableSetting>(SelectedCSV);
                    ContentInfo = TableData.ToString();
+
+                   if(!CsvHistory.Contains(SelectedCSV))
+                   {
+                       CsvHistory.Add(SelectedCSV);
+                       Settings.Default.configFiles = string.Join("|", csvHistory);
+                       Settings.Default.Save();
+                   }
 
                }
                catch (Exception ex)
@@ -102,12 +127,22 @@ namespace CSV_Importer.ViewModel
            RaisePropertyChanged("IsTaskRunning");
            }
        }
+
+       private string currentTask;
+
+       public string CurrentTask
+       {
+           get { return currentTask; }
+           set { currentTask = value;
+           RaisePropertyChanged("CurrentTask");
+           }
+       }
        
 
         #region command
        CancellationTokenSource cts;
-       private RelayCommand run;
 
+       private RelayCommand run;
        public RelayCommand Run
        {
            get
@@ -122,9 +157,16 @@ namespace CSV_Importer.ViewModel
                                var cancelToken = (CancellationToken)obj;
                                while (!cancelToken.IsCancellationRequested)
                                {
-                                   AddLog("Opening Connection");
-                                   await Task.Delay(500);
+                                   CurrentTask = "Started";
+                                   await DataTransfer.Load(TableData, AddLog,Completed, Onerror);
+                                   CurrentTask = "Waiting..";
+                                   await Task.Delay(TableData.Delay);
                                }
+
+                               RunStop = "Run";
+                               IsTaskRunning = false;
+                               CurrentTask = "";
+
                            }, cts.Token);
 
                            IsTaskRunning = true;
@@ -136,12 +178,14 @@ namespace CSV_Importer.ViewModel
                            RunStop = "Run";
                            cts.Cancel();
                            IsTaskRunning = false;
+                           CurrentTask = "";
                        }
 
                    }, () =>
                        {
-                           if (TableData != null && !string.IsNullOrEmpty(TableData.AmibrokerDb) &&
-                              !string.IsNullOrEmpty(TableData.AmibrokerExe) &&
+                           if (TableData != null && 
+                              //!string.IsNullOrEmpty(TableData.AmibrokerDb) &&
+                              //!string.IsNullOrEmpty(TableData.AmibrokerExe) &&
                               !string.IsNullOrEmpty(TableData.ConnectionString) &&
                               !string.IsNullOrEmpty(TableData.CSVFolder) &&
                               !string.IsNullOrEmpty(TableData.ProviderConnectionString) &&
@@ -156,8 +200,28 @@ namespace CSV_Importer.ViewModel
            }
        }
 
+       void Completed()
+       {
+
+       }
+
+       void Onerror()
+       {
+           if (cts != null && !cts.IsCancellationRequested)
+           {
+               cts.Cancel();
+               MessageBox.Show("Process halted due to too many errors!!");
+           }
+       }
+
+
+       
+       
+
+
        private void AddLog(string p)
        {
+           CurrentTask = p;
            Log += string.Format("\n[{0}] {1}", DateTime.Now.ToString("HH:mm:ss"), p);
        }
 
@@ -171,15 +235,29 @@ namespace CSV_Importer.ViewModel
                    {
                       var vm = SimpleIoc.Default.GetInstance<SaveViewModel>();
 
+                     
                       vm.AmibrokerDB = TableData.AmibrokerDb;
                       vm.AmibrokerPath = TableData.AmibrokerExe;
                       vm.ConnectionString = TableData.ConnectionString;
                       vm.CSVDirectory = TableData.CSVFolder;
                       vm.ProviderConnectionString = TableData.ProviderConnectionString;
                       vm.TableName = TableData.TableName;
-                      vm.TableFields =TableData.Fields;
+                      vm.TableFields =new ObservableCollection<TableField>();
                       vm.TimeDelay = TableData.Delay;
                       vm.IsFirstRowHeader = TableData.IsFirstRowHeader;
+                      vm.Delimiter = TableData.Delimiter;
+
+                      foreach (var item in TableData.Fields)
+                      {
+                          vm.TableFields.Add(new TableField() 
+                          {
+                              SqlColumnHeader = item.SqlColumnHeader,
+                                CsvColumnHeader = null,
+                                ColumnInfo = item.ColumnInfo,
+                                DatatypeName = item.DatatypeName,
+                                _Tag = item._Tag,
+                          });
+                      }
 
                       SimpleIoc.Default.GetInstance<MainViewModel>().GotoSave.Execute(null);
                    }, 
@@ -216,5 +294,6 @@ namespace CSV_Importer.ViewModel
         
         
         #endregion
+
     }
 }
