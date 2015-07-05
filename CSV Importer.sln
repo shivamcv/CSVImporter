@@ -5,6 +5,8 @@ VisualStudioVersion = 12.0.30324.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSV Importer", "CSV Importer\CSV Importer.csproj", "{5C75CC42-23C0-4BB9-A83C-D9B35D008CD6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSVSamples", "CSVSamples\CSVSamples.csproj", "{5DF963DE-8224-4A01-87A6-C450F2770BE4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{5C75CC42-23C0-4BB9-A83C-D9B35D008CD6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5C75CC42-23C0-4BB9-A83C-D9B35D008CD6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5C75CC42-23C0-4BB9-A83C-D9B35D008CD6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5DF963DE-8224-4A01-87A6-C450F2770BE4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5DF963DE-8224-4A01-87A6-C450F2770BE4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5DF963DE-8224-4A01-87A6-C450F2770BE4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5DF963DE-8224-4A01-87A6-C450F2770BE4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

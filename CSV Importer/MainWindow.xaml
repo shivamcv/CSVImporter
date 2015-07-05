@@ -29,6 +29,9 @@
             <TabItem Header="Save">
                 <view:Save/>
             </TabItem>
+            <TabItem Header="DateTime Conversion">
+                <view:DateTimeConversion/>
+            </TabItem>
         </TabControl>
 
     </Grid>

@@ -42,7 +42,6 @@ namespace CSV_Importer.ViewModel
            }
        }
        
-
        private string selectedCSV;
 
        public string SelectedCSV
@@ -56,7 +55,16 @@ namespace CSV_Importer.ViewModel
            RaisePropertyChanged("SelectedCSV");
            }
        }
+
+       private int batchSize = 100;
+
+       public int BatchSize
+       {
+           get { return batchSize; }
+           set { batchSize = value; }
+       }
        
+
        private void loadCSV()
        {
            if(File.Exists(SelectedCSV))
@@ -158,7 +166,7 @@ namespace CSV_Importer.ViewModel
                                while (!cancelToken.IsCancellationRequested)
                                {
                                    CurrentTask = "Started";
-                                   await DataTransfer.Load(TableData, AddLog,Completed, Onerror);
+                                   await DataTransfer.Load(TableData,ProgressChanged, AddLog,Completed, Onerror,cancelToken,BatchSize);
                                    CurrentTask = "Waiting..";
                                    await Task.Delay(TableData.Delay);
                                }
@@ -200,6 +208,11 @@ namespace CSV_Importer.ViewModel
            }
        }
 
+       private void ProgressChanged(string obj)
+       {
+           CurrentTask = obj;
+       }
+
        void Completed()
        {
 
@@ -221,7 +234,7 @@ namespace CSV_Importer.ViewModel
 
        private void AddLog(string p)
        {
-           CurrentTask = p;
+           
            Log += string.Format("\n[{0}] {1}", DateTime.Now.ToString("HH:mm:ss"), p);
        }
 

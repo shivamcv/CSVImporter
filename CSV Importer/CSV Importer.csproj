@@ -95,6 +95,9 @@
     <Compile Include="View\Connection.xaml.cs">
       <DependentUpon>Connection.xaml</DependentUpon>
     </Compile>
+    <Compile Include="View\DateTimeConversion.xaml.cs">
+      <DependentUpon>DateTimeConversion.xaml</DependentUpon>
+    </Compile>
     <Compile Include="View\Run.xaml.cs">
       <DependentUpon>Run.xaml</DependentUpon>
     </Compile>
@@ -126,6 +129,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="View\Connection.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\DateTimeConversion.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
